@@ -62,18 +62,19 @@ module Pipeline
           when Hash.to_s
             attributes.each do |k,v|
               new_attributes[k.to_sym] = v.to_s
+              self.bfh_map[k.to_sym] = v.to_s
             end
           when Array.to_s
             attributes.each do |elem|
               new_attributes[elem.to_sym] = "vial.#{elem}"
+              self.bfh_map[elem.to_sym] = "vial.#{elem}"
             end
           else
             raise 'Please pass either an Array or Hash of attributes'
           end
-          (new_attributes.keys - bfh_map.keys).each do |attr|
-            self.class.send(:attr_accessor, attr)
+          new_attributes.keys.each do |attr|
+            self.class.send(:attr_accessor, attr) unless self.respond_to? attr
           end
-          self.bfh_map.merge(new_attributes)
           self
         end
 

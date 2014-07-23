@@ -5,9 +5,10 @@ module Pipeline
   module BSI
     module Models
       class Specimen < Pipeline::Model::Base
-        attr_accessor :seminal_parent
-        REQUIRED_ATTRIBUTES = %w(study_id subject_id specimen_type date_drawn date_received label_status billing_method thaws).map{|v| v.to_sym}
-        BFH_MAP = {
+        attr_accessor :seminal_parent, :bfh_map
+
+        REQUIRED_FIELDS = %w(study_id subject_id specimen_type date_drawn date_received label_status billing_method thaws).map{|v| v.to_sym}
+        BSI_CORE_FIELDS = {
           :study_id               => 'vial.study_id',
           :specimen_type          => 'vial.mat_type',
           :current_label          => 'vial.current_label',
@@ -45,32 +46,46 @@ module Pipeline
           :sample_modifiers       => 'sample.sample_modifiers'
         }
 
-        vial_props = (BFH_MAP.keys+REQUIRED_ATTRIBUTES).uniq
-        begin
-          vial_props = YAML::load(File.open(File.join(File.dirname(__FILE__), 'vial_props.yaml'))).map{|v| v.to_sym}
-        rescue Errno::ENOENT
+        # Define Defaults
+        def initialize(options={})
+          @bfh_map = Hash.new
+          add_attributes(BSI_CORE_FIELDS)
+          add_attributes(REQUIRED_FIELDS)
+          add_attributes(options[:custom_required_fields])  if options[:custom_required_fields]
+          add_attributes(options[:custom_fields])           if options[:custom_fields]
+          self.thaws = '0'
         end
 
-        (vial_props-BFH_MAP.keys+[:specimen_code]).each{|attr_string| attr_accessor attr_string.to_sym}
-        BFH_MAP.keys.each{ |attr| attr_accessor attr }
-
-        # Define Defaults
-        def initialize(bfh={})
-
-          unless bfh.empty?
-            self.seminal_parent = true
-            bfh.keys.each do |bfh_key|
-              if BFH_MAP.has_value?(bfh_key)
-                instance_eval("self.#{BFH_MAP.key(bfh_key)} = '#{bfh[bfh_key]}'")
-              else
-                instance_eval("self.#{bfh_key.gsub(/vial\./, '')} = '#{bfh[bfh_key]}'")
-              end
+        def add_attributes(attributes)
+          new_attributes = Hash.new
+          case attributes.class.to_s
+          when Hash.to_s
+            attributes.each do |k,v|
+              new_attributes[k.to_sym] = v.to_s
             end
-
+          when Array.to_s
+            attributes.each do |elem|
+              new_attributes[elem.to_sym] = "vial.#{elem}"
+            end
           else
-            self.thaws = '0'
+            raise 'Please pass either an Array or Hash of attributes'
           end
+          (new_attributes.keys - bfh_map.keys).each do |attr|
+            self.class.send(:attr_accessor, attr)
+          end
+          self.bfh_map.merge(new_attributes)
+          self
+        end
 
+        def build(bfh={})
+          self.seminal_parent = true
+          bfh.keys.each do |bfh_key|
+            if BFH_MAP.has_value?(bfh_key)
+              instance_eval("self.#{BFH_MAP.key(bfh_key)} = '#{bfh[bfh_key]}'")
+            else
+              instance_eval("self.#{bfh_key.gsub(/vial\./, '')} = '#{bfh[bfh_key]}'")
+            end
+          end
         end
 
         def bsi_id()
@@ -85,8 +100,8 @@ module Pipeline
           bfh = Hash.new
           # Add 1-1 matches/translations
           formatted_attributes.each do |k,v|
-            if BFH_MAP.has_key?(k)
-              bfh[BFH_MAP[k]] = v
+            if bfh_map.has_key?(k)
+              bfh[bfh_map[k]] = v
             else
               bfh["vial.#{k}"] = v
             end
@@ -95,11 +110,11 @@ module Pipeline
         end
 
         def valid?
-          incomplete_attrs = REQUIRED_ATTRIBUTES.find{|v| send(v).nil?}.nil?
+          incomplete_attrs = REQUIRED_FIELDS.find{|v| send(v).nil?}.nil?
         end
 
         def missing_attrs
-          REQUIRED_ATTRIBUTES.find_all{|a| send(a).nil?}
+          REQUIRED_FIELDS.find_all{|a| send(a).nil?}
         end
       end # class Specimen < Pipeline::Model::Base
 

@@ -49,9 +49,9 @@ module Pipeline
         # Define Defaults
         def initialize(options={})
           @bfh_map = Hash.new
-          add_attributes(BSI_CORE_FIELDS)
           add_attributes(REQUIRED_FIELDS)
           add_attributes(options[:custom_required_fields])  if options[:custom_required_fields]
+          add_attributes(BSI_CORE_FIELDS)
           add_attributes(options[:custom_fields])           if options[:custom_fields]
           self.thaws = '0'
         end

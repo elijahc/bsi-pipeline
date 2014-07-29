@@ -24,7 +24,6 @@ FactoryGirl.define do
     # Generic Slide Specimen
     trait :slide do
       specimen_type "SLDTS"
-      stain_type    "H&E"
     end
 
     factory :slide_specimen, traits: [:slide]

@@ -9,41 +9,32 @@ module Pipeline
 
         REQUIRED_FIELDS = %w(study_id subject_id specimen_type date_drawn date_received label_status billing_method thaws).map{|v| v.to_sym}
         BSI_CORE_FIELDS = {
+          # Sample level fields
+          :subject_id             => 'sample.subject_id',
+          :sample_id              => 'sample.sample_id',
+          :date_drawn             => 'sample.date_drawn',
+          :kit_id                 => 'sample.kit_id',
+          :pickup_location        => 'sample.pickup_location',
+          :sample_modifiers       => 'sample.sample_modifiers',
+          # Vial fields
           :study_id               => 'vial.study_id',
-          :specimen_type          => 'vial.mat_type',
+          :repos_id               => 'vial.repos_id',
+          :sequence               => 'vial.seq_num',
           :current_label          => 'vial.current_label',
+          :specimen_type          => 'vial.mat_type',
           :parent_id              => 'vial.parent_id',
           :measurement            => 'vial.volume',
-          :measurement_est        => 'vial.volume_est',
-          :measurement_unit       => 'vial.volume_unit',
-          :stain_type             => 'vial.field_268',
-          :block_status           => 'vial.field_266',
-          :biobank                => 'vial.field_269',
-          :grade                  => 'vial.field_271',
+          :vial_status            => 'vial.vial_status',
+          # Location Fields
           :room                   => 'location.room',
           :building               => 'location.building',
           :freezer                => 'location.freezer',
           :shelf                  => 'location.shelf',
           :rack                   => 'location.rack',
           :box                    => 'location.box',
+          # Vial-Location fields
           :row                    => 'vial_location.row',
-          :col                    => 'vial_location.col',
-          :sample_id              => 'sample.sample_id',
-          :appointment_time       => 'sample.appointment_time',
-          :center                 => 'sample.center',
-          :data_manager           => 'sample.data_manager',
-          :date_drawn             => 'sample.date_drawn',
-          :cra                    => 'sample.cra',
-          :kit_id                 => 'sample.kit_id',
-          :pickup_location        => 'sample.pickup_location',
-          :subject_id             => 'sample.subject_id',
-          :surgeon                => 'sample.surgeon',
-          :referring_physician    => 'sample.field_273',
-          :surgical_case_number   => 'sample.surgical_case_number',
-          :surgical_case_part     => 'sample.field_267',
-          :telephone              => 'sample.telephone',
-          :timepoint              => 'sample.time_point',
-          :sample_modifiers       => 'sample.sample_modifiers'
+          :col                    => 'vial_location.col'
         }
 
         # Define Defaults

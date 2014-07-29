@@ -27,7 +27,7 @@ module Pipeline
         def add_specimens(specimens)
           @specimens = specimens
           format
-          @bsi.batch.addVials( @id, specimens.map{ |s| s.to_bfh } )
+          @bsi.batch.addVials( @id, @specimens.map{ |s| s.to_bfh } )
           nil
         end
 
@@ -40,11 +40,25 @@ module Pipeline
           # Reserve Sample ID's for all the seminal parent's
           # Returns and array of strings with both the sampleID and the sequence number in the format: AAA000000 0000
             # Only keep first 6 characters which represent the sample id's (remove the sequence suffix)
-            @seminal_parents = @bsi.batch.reserveAvailableBsiIds( @id, 'LAA000000', num_seminal_parents ).map{|i| i[0..-6]} if num_seminal_parents > 0
+            @sample_id_pool = @bsi.batch.reserveAvailableBsiIds( @id, 'LAA000000', num_seminal_parents ).map{|i| i[0..-6]} if num_seminal_parents > 0
           # Not sure why I've been getting this error periodically, but it happens
           rescue NoMethodError
             fails += 1
             retry if fails < 3
+          end
+
+          collection_dates = @specimens.map{|s| s.date_drawn}.uniq
+          specimen_types   = @specimens.map{|s| s.specimen_type}.uniq
+          collection_dates.each do |date|
+            specimen_types.each do |type|
+              specimen_family = @specimens.select{|s| s.date_drawn == date && s.specimen_type == type}
+              family_sample_id = @sample_id_pool.pop
+              specimen_family.each_with_index do |spec, i|
+                # Assign sample and sequence numbers
+                spec.sample_id  = family_sample_id
+                spec.sequence    = i+1
+              end
+            end
           end
         end
 

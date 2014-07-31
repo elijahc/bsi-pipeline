@@ -51,6 +51,7 @@ describe AddBatch do
       end
 
       it 'returns array of Pipeline::BSI::Models::Specimen objects' do
+        expect(@batch.specimens).to be_instance_of Array
       end
     end
   end

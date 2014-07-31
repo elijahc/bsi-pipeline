@@ -56,7 +56,7 @@ module Pipeline
               specimen_family.each_with_index do |spec, i|
                 # Assign sample and sequence numbers
                 spec.sample_id  = family_sample_id
-                spec.sequence    = i+1
+                spec.sequence   = i+1
               end
             end
           end
@@ -81,21 +81,25 @@ module Pipeline
 
         def import(all_specimens, options={})
           @specimens = all_specimens
+          study_ids   = @specimens.map{|e| e.study_id}.uniq
           subject_ids = @specimens.map{|e| e.subject_id}.uniq
 
-          subject_ids.each_with_index do |sid, i|
-            # Filter by subject_id
-            subset = @specimens.select{|e| e.subject_id == sid}
+          study_ids.each do |study|
+            subject_ids.each_with_index do |sid, i|
+              # Filter by subject_id and study_id
+              subset = @specimens.select{|e| e.study_id == study && e.subject_id == sid}
 
-            batch_properties = {
-              'batch.description' => "Subject: #{sid}"
-            }
+              batch_properties = {
+                'batch.description' => "Subject: #{sid}",
+                'batch.study_id'    => study.to_s
+              }
 
-            @batch = AddBatch.new(@bsi, batch_properties)
-            @batch.add_specimens(subset)
-            @batch.commit if options['commit']
+              @batch = AddBatch.new(@bsi, batch_properties)
+              @batch.add_specimens(subset)
+              @batch.commit if options['commit']
 
-            @batches << @batch
+              @batches << @batch
+            end
           end
 
           @bsi.common.logoff

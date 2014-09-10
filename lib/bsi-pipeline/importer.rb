@@ -33,7 +33,11 @@ module Pipeline
 
         def format
           # Find out how many seminal parents there are
-          num_seminal_parents = @specimens.select{|s| ['N/A', ''].include?( s.parent_id.to_s )}.length
+
+          # Old way of estimating number of seminal parents, different now that we import in groups.
+          # num_seminal_parents = @specimens.select{|s| ['N/A', ''].include?( s.parent_id.to_s )}.length
+
+          num_seminal_parents = @specimens.map{|s| [s.date_drawn, s.specimen_type]}.uniq.length
 
           fails = 0
           begin
@@ -56,7 +60,11 @@ module Pipeline
               specimen_family.each_with_index do |spec, i|
                 # Assign sample and sequence numbers
                 spec.sample_id  = family_sample_id
-                spec.sequence   = i+1
+                unless specimen_family.length == 1
+                  spec.sequence   = i+1
+                else
+                  spec.sequence   = 0
+                end
               end
             end
           end
@@ -74,7 +82,7 @@ module Pipeline
         attr_accessor :specimens, :batches, :batch_delimiter
 
         def initialize(key, options={})
-          @bsi              = RBC.new(key)
+          @bsi              = RBC.new(key, options)
           @specimens        = specimens
           @batches          = Array.new
         end

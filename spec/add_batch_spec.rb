@@ -3,7 +3,7 @@ require'spec_helper'
 describe AddBatch do
   before :all do
     @bsi = RBC.new(
-      { :user     => 'ecog_bot',
+      { :user     => 'biorepository_bot',
         :pass     => ENV['ECOG_BOT_PASS'],
         :server   => 'PCF',
         :url      => 'https://websvc-mirror.bsisystems.com:2271/bsi/xmlrpc'
@@ -73,9 +73,5 @@ describe AddBatch do
 
   describe '#commit' do
     it 'commits specimens in the batch to the BSI database if all edit checks pass'
-  end
-
-  after :all do
-    @bsi.common.logoff
   end
 end

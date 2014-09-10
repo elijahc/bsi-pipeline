@@ -3,12 +3,12 @@ require 'spec_helper'
 describe SpecimenImporter do
   before :each do
       key = {
-        :user     => 'ecog_bot',
+        :user     => 'biorepository_bot',
         :pass     => ENV['ECOG_BOT_PASS'],
         :server   => 'PCF',
         :url      => 'https://websvc-mirror.bsisystems.com:2271/bsi/xmlrpc'
       }
-    @importer = SpecimenImporter.new(key)
+    @importer = SpecimenImporter.new(key, {:instance => 'mirror', :debug => 'false'})
 
   end
 
